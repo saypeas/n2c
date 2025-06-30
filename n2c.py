@@ -29,7 +29,6 @@ DEPENDENCIES:
 - requests: HTTP API calls
 - csv: CSV file handling
 - shelve: Persistent caching
-- keyboard: Interrupt detection
 - argparse: Command line argument parsing
 
 USAGE:
@@ -43,7 +42,6 @@ import csv
 import time
 import os
 import shelve
-import keyboard
 from collections import defaultdict
 from datetime import datetime
 
@@ -309,9 +307,7 @@ def process_ndc_list(input_file, output_file, mapping_type, cache):
 
     try:
         for idx, ndc in enumerate(ndcs, start=1):
-            # Check for keyboard interrupt (P key)
-            if keyboard.is_pressed('p'):
-                raise KeyboardInterrupt
+         
 
             # Get RxCUI from NDC
             rxcui = get_rxcui_from_ndc(ndc, cache)
@@ -361,11 +357,6 @@ def process_ndc_list(input_file, output_file, mapping_type, cache):
                 remaining_seconds = int(remaining_time.total_seconds())
                 print(f"Processing {idx}/{total_ndcs}: {ndc} - Estimated completion in {format_time(remaining_seconds)}")
 
-    except KeyboardInterrupt:
-        completion_percentage = (ndcs_with_atc / idx) * 100
-        print(f"Interrupted. {completion_percentage:.2f}% of NDCs queried have at least one ATC class associated.")
-        cache.sync()
-
     # De-duplicate the results if necessary
     unique_results = {tuple(result.items()) for result in results}
     unique_results = [dict(result) for result in unique_results]
@@ -409,7 +400,7 @@ if __name__ == "__main__":
 
     cache_file = generate_cache_filename(args.input_file, args.mapping)
 
-    print("Will start querying the NDCs. If you need to interrupt, press P.")
+    print("Will start querying the NDCs.")
 
     # Use shelve to create a persistent cache in the same directory as the input file
     with shelve.open(cache_file) as cache:
